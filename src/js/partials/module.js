@@ -1,9 +1,9 @@
 'use strict';
 
-function NewModule () {};
+class NewModule {};
 
-NewModule.prototype.init = function(){
+NewModule.init = function(){
     console.log('JS is ready');
 }
 
-module.exports = new NewModule();
+module.exports = NewModule;
