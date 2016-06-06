@@ -1,9 +1,12 @@
 'use strict';
 
-class NewModule {};
+class NewModule {
+    constructor(){
+        this.title = "JS is ready";
+    }
+    init(){
+        console.log(this.title);
+    }
+};
 
-NewModule.init = function(){
-    console.log('JS is ready');
-}
-
-module.exports = NewModule;
+export default NewModule;

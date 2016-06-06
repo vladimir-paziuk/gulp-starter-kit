@@ -1,5 +1,7 @@
 'use strict';
 
-var module = require('./partials/module');
+import Module from './partials/module';
+
+const module = new Module();
 
 module.init();

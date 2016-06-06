@@ -58,7 +58,7 @@ function bundle() {
 // ///////////////////////////////////////////////
 
 gulp.task('styles', function () {
-    gulp.src('src/scss/styles.scss')
+    gulp.src('./src/scss/styles.scss')
         .pipe(sourcemaps.init())
         .pipe(gulpif(env === 'production', sass({ outputStyle: 'compressed' }),
             sass({ outputStyle: 'expanded' })))
@@ -68,7 +68,7 @@ gulp.task('styles', function () {
             cascade: false
         }))
         .pipe(gulpif(env === 'development', sourcemaps.write('../maps')))
-        .pipe(gulp.dest('public/css'))
+        .pipe(gulp.dest('./public/css'))
         .pipe(browserSync.reload({ stream: true }));
 });
 
@@ -78,7 +78,7 @@ gulp.task('styles', function () {
 // ////////////////////////////////////////////////
 
 gulp.task('html', function () {
-    return gulp.src('public/**/*.html')
+    return gulp.src('./public/**/*.html')
         .pipe(browserSync.reload({ stream: true }));
 });
 
@@ -101,8 +101,8 @@ gulp.task('browserSync', function () {
 // ////////////////////////////////////////////////
 
 gulp.task('watch', function () {
-  gulp.watch('public/**/*.html', ['html']);
-  gulp.watch('src/scss/**/*.scss', ['styles']);
+  gulp.watch('./public/**/*.html', ['html']);
+  gulp.watch('./src/scss/**/*.scss', ['styles']);
 });
 
 gulp.task('default', ['js', 'styles', 'browserSync', 'watch']);
