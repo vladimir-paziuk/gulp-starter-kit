@@ -14,6 +14,7 @@ var gulp          = require('gulp'),
     browserSync   = require('browser-sync'),
     sass          = require('gulp-sass'),
     autoprefixer  = require('gulp-autoprefixer'),
+    twig          = require('gulp-twig'),
     gulpif        = require('gulp-if');
 
 // ES6 Support for Browserify
@@ -77,8 +78,10 @@ gulp.task('styles', function () {
 // HTML Tasks
 // ////////////////////////////////////////////////
 
-gulp.task('html', function () {
-    return gulp.src('./public/**/*.html')
+gulp.task('templates', function () {
+    return gulp.src('./src/*.html')
+        .pipe(twig())
+        .pipe(gulp.dest('./public'))
         .pipe(browserSync.reload({ stream: true }));
 });
 
@@ -91,7 +94,7 @@ gulp.task('browserSync', function () {
   browserSync({
     server: {
       baseDir: './public/'
-    },
+    }
   });
 });
 
@@ -101,8 +104,8 @@ gulp.task('browserSync', function () {
 // ////////////////////////////////////////////////
 
 gulp.task('watch', function () {
-  gulp.watch('./public/**/*.html', ['html']);
+  gulp.watch('./src/**/*.html', ['templates']);
   gulp.watch('./src/scss/**/*.scss', ['styles']);
 });
 
-gulp.task('default', ['js', 'styles', 'browserSync', 'watch']);
+gulp.task('default', ['templates', 'js', 'styles', 'browserSync', 'watch']);

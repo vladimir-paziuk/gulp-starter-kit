@@ -7,6 +7,6 @@ class NewModule {
     init(){
         console.log(this.title);
     }
-};
+}
 
 export default NewModule;
