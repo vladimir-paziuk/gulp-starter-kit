@@ -15,6 +15,8 @@ var gulp          = require('gulp'),
     sass          = require('gulp-sass'),
     autoprefixer  = require('gulp-autoprefixer'),
     twig          = require('gulp-twig'),
+    imagemin      = require('gulp-imagemin'),
+    pngquant      = require('imagemin-pngquant'),
     gulpif        = require('gulp-if');
 
 // ES6 Support for Browserify
@@ -55,7 +57,7 @@ function bundle() {
 
 
 // ////////////////////////////////////////////////
-// Styles Tasks
+// Styles
 // ///////////////////////////////////////////////
 
 gulp.task('styles', function () {
@@ -75,7 +77,7 @@ gulp.task('styles', function () {
 
 
 // ////////////////////////////////////////////////
-// HTML Tasks
+// HTML
 // ////////////////////////////////////////////////
 
 gulp.task('templates', function () {
@@ -87,7 +89,22 @@ gulp.task('templates', function () {
 
 
 // ////////////////////////////////////////////////
-// Browser-Sync Tasks
+// Images
+// ////////////////////////////////////////////////
+
+gulp.task('images', function () {
+    gulp.src('./src/images/**/*')
+        .pipe(imagemin({
+            progressive: true,
+            svgoPlugins: [{removeViewBox: false}],
+            use: [pngquant()]
+        }))
+        .pipe(gulp.dest('./public/images'));
+});
+
+
+// ////////////////////////////////////////////////
+// Browser-Sync
 // ////////////////////////////////////////////////
 
 gulp.task('browserSync', function () {
@@ -108,4 +125,9 @@ gulp.task('watch', function () {
   gulp.watch('./src/scss/**/*.scss', ['styles']);
 });
 
-gulp.task('default', ['templates', 'js', 'styles', 'browserSync', 'watch']);
+
+// ////////////////////////////////////////////////
+// Default Tasks
+// ////////////////////////////////////////////////
+
+gulp.task('default', ['templates', 'js', 'styles', 'images', 'browserSync', 'watch']);
