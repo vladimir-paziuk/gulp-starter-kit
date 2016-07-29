@@ -4,5 +4,5 @@ COMMAND LINE:
 	2. npm start (development) || npm run production
 
 For disable ES6 support remove:
-	babel-preset-es2015 and babelify from package.json devDependencies,
-	"// ES6 Support for Browserify" from gulpfile.js
+	1. babel-preset-es2015 and babelify from package.json devDependencies,
+	2. "// ES6 Support for Browserify" from gulpfile.js
