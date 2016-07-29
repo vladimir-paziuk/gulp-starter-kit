@@ -5,5 +5,5 @@ COMMAND LINE:
 
 For disable ES6 support remove:
 
-	1. babel-preset-es2015 and babelify from package.json devDependencies,
+	1. babel-preset-es2015 and babelify from package.json devDependencies
 	2. "// ES6 Support for Browserify" from gulpfile.js
