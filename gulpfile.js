@@ -19,15 +19,14 @@ var gulp          = require('gulp'),
     pngquant      = require('imagemin-pngquant'),
     gulpif        = require('gulp-if');
 
-// ES6 Support for Browserify
-var babelify      = require('babelify');
+var babelify      = require('babelify'); // ES6 Support for Browserify
 
 // setup node enviorment (development or production)
 var env = process.env.NODE_ENV;
 
 
 // ////////////////////////////////////////////////
-// JavaScript: Browserify, Watchify, Babalify
+// JavaScript: Browserify, Watchify, Babelify
 // ////////////////////////////////////////////////
 
 var customOpts = {
