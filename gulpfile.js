@@ -17,7 +17,8 @@ var gulp          = require('gulp'),
     twig          = require('gulp-twig'),
     imagemin      = require('gulp-imagemin'),
     pngquant      = require('imagemin-pngquant'),
-    gulpif        = require('gulp-if');
+    gulpif        = require('gulp-if'),
+    del           = require('del');
 
 var babelify      = require('babelify'); // ES6 Support for Browserify
 
@@ -116,6 +117,19 @@ gulp.task('browserSync', function () {
 
 
 // ////////////////////////////////////////////////
+// Delete maps folder in production mode
+// ///////////////////////////////////////////////
+
+gulp.task('clean:maps', (env === 'production', deleteMapsFolder));
+
+function deleteMapsFolder() {
+    return del([
+        'public//maps/**',
+    ]);
+}
+
+
+// ////////////////////////////////////////////////
 // Watch Tasks
 // ////////////////////////////////////////////////
 
@@ -129,4 +143,4 @@ gulp.task('watch', function () {
 // Default Tasks
 // ////////////////////////////////////////////////
 
-gulp.task('default', ['templates', 'js', 'styles', 'images', 'browserSync', 'watch']);
+gulp.task('default', ['templates', 'js', 'styles', 'images', 'browserSync', 'clean:maps', 'watch']);
