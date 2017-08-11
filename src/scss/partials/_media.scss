@@ -1,3 +1,32 @@
 // ***********************************
 // MEDIA
 // ***********************************
+
+// ==========  Mobile First Method  ==========
+
+ // Extra Small Devices, Phones 
+@media only screen and (min-width :$media-xs) {}
+
+// Small Devices, Tablets 
+@media only screen and (min-width : $media-sm) {}
+
+// Medium Devices, Desktops 
+@media only screen and (min-width : $media-md) {}
+
+// Large Devices, Wide Screens 
+@media only screen and (min-width : $media-lg) {}
+
+
+// ==========  Non-Mobile First Method  ==========
+
+// Large Devices, Wide Screens 
+@media only screen and (max-width : $media-lg) {}
+
+// Medium Devices, Desktops 
+@media only screen and (max-width : $media-md) {}
+
+// Small Devices, Tablets 
+@media only screen and (max-width : $media-sm) {}
+
+// Extra Small Devices, Phones
+@media only screen and (max-width : $media-xs) {}
