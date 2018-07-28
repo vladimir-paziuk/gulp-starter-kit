@@ -1,7 +1,7 @@
 COMMAND LINE:
 
-	1. sudo npm install
-	2. npm start (development) || npm run production
+	1. npm install
+	2. npm start (development) || npm run production (build)
 
 For disable ES6 support remove:
 
