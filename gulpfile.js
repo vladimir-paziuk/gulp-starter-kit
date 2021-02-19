@@ -1,18 +1,11 @@
-// ////////////////////////////////////////////////
-// Required
-// ////////////////////////////////////////////////
-
-var gulp          = require('gulp'),
-    watchify      = require('watchify'),
-    browserify    = require('browserify'),
-    source        = require('vinyl-source-stream'),
-    buffer        = require('vinyl-buffer'),
+var
+    gulp          = require('gulp'),
     gutil         = require('gulp-util'),
     uglify        = require('gulp-uglify'),
     sourcemaps    = require('gulp-sourcemaps'),
-    assign        = require('lodash.assign'),
     browserSync   = require('browser-sync'),
     sass          = require('gulp-sass'),
+    sassCompiler  = require('node-sass'),
     autoprefixer  = require('gulp-autoprefixer'),
     twig          = require('gulp-twig'),
     imagemin      = require('gulp-imagemin'),
@@ -20,127 +13,159 @@ var gulp          = require('gulp'),
     gulpif        = require('gulp-if'),
     del           = require('del');
 
-var babelify      = require('babelify'); // ES6 Support for Browserify
+// ////////////////////////////////////////////////
+// Settings
+// ////////////////////////////////////////////////
 
-// setup node enviorment (development or production)
-var env = process.env.NODE_ENV;
+var isDev = process.env.NODE_ENV === "development"; // || production
 
+var bSync = {
+    live: {
+        server: {
+            baseDir: './public/'
+        }
+    },
+    reload: { stream: true }
+};
+
+var sourceMapsPaths = {
+    public: './public/maps',
+    write: '../maps',
+};
+
+var paths = {
+    scripts: {
+        entry: './src/js/main.js',
+        watch: './src/js/main.js',
+        dest: './public/js'
+    },
+    styles: {
+        entry: './src/scss/styles.scss',
+        watch: './src/scss/**/*.scss',
+        dest: './public/css',
+    },
+    templates: {
+        entry: './src/*.html',
+        watch: './src/**/*.html',
+        dest: './public',
+    },
+    images: {
+        entry: './src/images/**/*',
+        dest: './public/images',
+    },
+};
 
 // ////////////////////////////////////////////////
 // JavaScript: Browserify, Watchify, Babelify
 // ////////////////////////////////////////////////
 
-var customOpts = {
-  entries: ['./src/js/main.js'],
-  debug: true
-};
-var opts = assign({}, watchify.args, customOpts);
-var b = watchify(browserify(opts));
-
-b.transform('babelify', { presets: ['es2015'] }); // ES6 Support for Browserify
-
-gulp.task('js', bundle);
-b.on('update', bundle);
-b.on('log', gutil.log);
-
-function bundle() {
-  return b.bundle()
-    .on('error', gutil.log.bind(gutil, 'Browserify Error'))
-    .pipe(source('main.js'))
-    .pipe(buffer())
-    .pipe(gulpif(env === 'production', uglify()))
-    .pipe(sourcemaps.init({ loadMaps: true }))
-    .pipe(gulpif(env === 'development', sourcemaps.write('../maps')))
-    .pipe(gulp.dest('./public/js'))
-    .pipe(browserSync.reload({ stream: true }));
+function scripts() {
+    return gulp.src(paths.scripts.entry)
+        .pipe(gulpif(!isDev, uglify()))
+        .pipe(sourcemaps.init({ loadMaps: true }))
+        .pipe(gulp.dest(paths.scripts.dest))
+        .pipe(browserSync.reload(bSync.reload));
 }
 
+// var babelify      = require('babelify'); // ES6 Support for Browserify
+// var opts = assign({}, watchify.args, customOpts);
+// var b = watchify(browserify(opts));
+// b.transform('babelify', { presets: ['es2015'] }); // ES6 Support for Browserify
+// b.on('change', bundle);
+// b.on('log', gutil.log);
+
+// gulp.task('js', function () {
+//     return gulp.src(customOpts.entries)
+//         .on('error', gutil.log.bind(gutil, 'Browserify Error'))
+//         .pipe(source('main.js'))
+//         .pipe(buffer())
+//         .pipe(gulpif(env === 'production', uglify()))
+//         .pipe(sourcemaps.init({ loadMaps: true }))
+//         .pipe(gulpif(env === 'development', sourcemaps.write(sourceMapsPaths.write)))
+//         .pipe(gulp.dest('./public/js'))
+//         .pipe(browserSync.reload(bSync.reload));
+// });
 
 // ////////////////////////////////////////////////
 // Styles
 // ///////////////////////////////////////////////
 
-gulp.task('styles', function () {
-    gulp.src('./src/scss/styles.scss')
+sass.compiler = sassCompiler;
+
+function styles() {
+    return gulp.src(paths.styles.entry)
         .pipe(sourcemaps.init())
-        .pipe(gulpif(env === 'production', sass({ outputStyle: 'compressed' }),
-            sass({ outputStyle: 'expanded' })))
+        .pipe(gulpif(
+            isDev,
+                sass({ outputStyle: 'expanded' }),
+                sass({ outputStyle: 'compressed' })
+        ))
         .on('error', gutil.log.bind(gutil, 'SCSS Error'))
-        .pipe(autoprefixer({
-            browsers: ['last 3 versions'],
-            cascade: false
-        }))
-        .pipe(gulpif(env === 'development', sourcemaps.write('../maps')))
-        .pipe(gulp.dest('./public/css'))
-        .pipe(browserSync.reload({ stream: true }));
-});
-
+        .pipe(autoprefixer({ cascade: false }))
+        .pipe(gulpif(isDev, sourcemaps.write(sourceMapsPaths.write)))
+        .pipe(gulp.dest(paths.styles.dest))
+        .pipe(browserSync.reload(bSync.reload));
+}
 
 // ////////////////////////////////////////////////
-// HTML
+// Templates
 // ////////////////////////////////////////////////
 
-gulp.task('templates', function () {
-    return gulp.src('./src/*.html')
+function templates() {
+    return gulp.src(paths.templates.entry)
         .pipe(twig())
-        .pipe(gulp.dest('./public'))
-        .pipe(browserSync.reload({ stream: true }));
-});
-
+        .pipe(gulp.dest(paths.templates.dest))
+        .pipe(browserSync.reload(bSync.reload));
+}
 
 // ////////////////////////////////////////////////
 // Images
 // ////////////////////////////////////////////////
 
-gulp.task('images', function () {
-    gulp.src('./src/images/**/*')
+function images() {
+    return gulp.src(paths.images.entry)
         .pipe(imagemin({
             progressive: true,
-            svgoPlugins: [{removeViewBox: false}],
+            svgoPlugins: [{ removeViewBox: false }],
             use: [pngquant()]
         }))
-        .pipe(gulp.dest('./public/images'));
-});
-
-
-// ////////////////////////////////////////////////
-// Browser-Sync
-// ////////////////////////////////////////////////
-
-gulp.task('browserSync', function () {
-  browserSync({
-    server: {
-      baseDir: './public/'
-    }
-  });
-});
-
-
-// ////////////////////////////////////////////////
-// Delete maps folder in production mode
-// ///////////////////////////////////////////////
-
-gulp.task('clean:maps', (env === 'production', deleteMapsFolder));
-
-function deleteMapsFolder() {
-    return del([
-        'public//maps/**',
-    ]);
+        .pipe(gulp.dest(paths.images.dest));
 }
 
+// ////////////////////////////////////////////////
+// Delete maps folder
+// ///////////////////////////////////////////////
+
+function cleanMaps() {
+    return del([sourceMapsPaths.public]);
+}
+
+// ////////////////////////////////////////////////
+// Browser sync
+// ////////////////////////////////////////////////
+
+function browserSyncLive() {
+    browserSync(bSync.live);
+}
 
 // ////////////////////////////////////////////////
 // Watch Tasks
 // ////////////////////////////////////////////////
 
-gulp.task('watch', function () {
-  gulp.watch('./src/**/*.html', ['templates']);
-  gulp.watch('./src/scss/**/*.scss', ['styles']);
-});
-
+function watch () {
+    gulp.watch(paths.scripts.watch, scripts);
+    gulp.watch(paths.styles.watch, styles);
+    gulp.watch(paths.templates.watch, templates);
+}
 
 // ////////////////////////////////////////////////
-// Default Tasks
+// Run & Build
 // ////////////////////////////////////////////////
 
-gulp.task('default', ['templates', 'js', 'styles', 'images', 'browserSync', 'clean:maps', 'watch']);
+var compileSources = gulp.parallel(styles, scripts, templates, images);
+var live = gulp.parallel(browserSyncLive, watch);
+
+var develop = gulp.series(compileSources, live);
+var production = gulp.series(compileSources, cleanMaps);
+
+gulp.task('default', gulpif(isDev, develop, production));
