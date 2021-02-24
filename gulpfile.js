@@ -1,9 +1,9 @@
 var
     gulp          = require('gulp'),
+    babel         = require('gulp-babel'),
     gutil         = require('gulp-util'),
-    uglify        = require('gulp-uglify'),
+    rename        = require('gulp-rename'),
     sourcemaps    = require('gulp-sourcemaps'),
-    browserSync   = require('browser-sync'),
     sass          = require('gulp-sass'),
     sassCompiler  = require('node-sass'),
     autoprefixer  = require('gulp-autoprefixer'),
@@ -11,32 +11,32 @@ var
     imagemin      = require('gulp-imagemin'),
     pngquant      = require('imagemin-pngquant'),
     gulpif        = require('gulp-if'),
-    del           = require('del');
+    del           = require('del'),
+    sync          = require('browser-sync'),
+    webpack       = require('webpack-stream');
 
 // ////////////////////////////////////////////////
 // Settings
 // ////////////////////////////////////////////////
 
-var isDev = process.env.NODE_ENV === "development"; // || production
+var env = process.env.NODE_ENV; // 'development' || 'production'
+var isDev = env === 'development';
 
-var bSync = {
-    live: {
-        server: {
-            baseDir: './public/'
-        }
-    },
-    reload: { stream: true }
+var syncOptions = {
+    server: {
+        baseDir: './public/'
+    }
 };
 
-var sourceMapsPaths = {
-    public: './public/maps',
-    write: '../maps',
+var sourcePaths = {
+    public: './public',
+    writeMaps: '../maps',
 };
 
 var paths = {
     scripts: {
         entry: './src/js/main.js',
-        watch: './src/js/main.js',
+        watch: './src/js/**/*.js',
         dest: './public/js'
     },
     styles: {
@@ -56,35 +56,22 @@ var paths = {
 };
 
 // ////////////////////////////////////////////////
-// JavaScript: Browserify, Watchify, Babelify
+// JavaScript
 // ////////////////////////////////////////////////
 
 function scripts() {
     return gulp.src(paths.scripts.entry)
-        .pipe(gulpif(!isDev, uglify()))
+        .pipe(babel({
+            presets: ['@babel/env']
+        }))
+        .pipe(webpack({
+            mode: env
+        }))
+        .pipe(rename('main.js'))
         .pipe(sourcemaps.init({ loadMaps: true }))
         .pipe(gulp.dest(paths.scripts.dest))
-        .pipe(browserSync.reload(bSync.reload));
+        .pipe(sync.stream());
 }
-
-// var babelify      = require('babelify'); // ES6 Support for Browserify
-// var opts = assign({}, watchify.args, customOpts);
-// var b = watchify(browserify(opts));
-// b.transform('babelify', { presets: ['es2015'] }); // ES6 Support for Browserify
-// b.on('change', bundle);
-// b.on('log', gutil.log);
-
-// gulp.task('js', function () {
-//     return gulp.src(customOpts.entries)
-//         .on('error', gutil.log.bind(gutil, 'Browserify Error'))
-//         .pipe(source('main.js'))
-//         .pipe(buffer())
-//         .pipe(gulpif(env === 'production', uglify()))
-//         .pipe(sourcemaps.init({ loadMaps: true }))
-//         .pipe(gulpif(env === 'development', sourcemaps.write(sourceMapsPaths.write)))
-//         .pipe(gulp.dest('./public/js'))
-//         .pipe(browserSync.reload(bSync.reload));
-// });
 
 // ////////////////////////////////////////////////
 // Styles
@@ -102,9 +89,9 @@ function styles() {
         ))
         .on('error', gutil.log.bind(gutil, 'SCSS Error'))
         .pipe(autoprefixer({ cascade: false }))
-        .pipe(gulpif(isDev, sourcemaps.write(sourceMapsPaths.write)))
+        .pipe(gulpif(isDev, sourcemaps.write(sourcePaths.writeMaps)))
         .pipe(gulp.dest(paths.styles.dest))
-        .pipe(browserSync.reload(bSync.reload));
+        .pipe(sync.stream());
 }
 
 // ////////////////////////////////////////////////
@@ -115,7 +102,7 @@ function templates() {
     return gulp.src(paths.templates.entry)
         .pipe(twig())
         .pipe(gulp.dest(paths.templates.dest))
-        .pipe(browserSync.reload(bSync.reload));
+        .pipe(sync.stream());
 }
 
 // ////////////////////////////////////////////////
@@ -136,16 +123,16 @@ function images() {
 // Delete maps folder
 // ///////////////////////////////////////////////
 
-function cleanMaps() {
-    return del([sourceMapsPaths.public]);
+function clean() {
+    return del([sourcePaths.public]);
 }
 
 // ////////////////////////////////////////////////
 // Browser sync
 // ////////////////////////////////////////////////
 
-function browserSyncLive() {
-    browserSync(bSync.live);
+function syncLive() {
+    sync(syncOptions);
 }
 
 // ////////////////////////////////////////////////
@@ -153,6 +140,8 @@ function browserSyncLive() {
 // ////////////////////////////////////////////////
 
 function watch () {
+    syncLive();
+
     gulp.watch(paths.scripts.watch, scripts);
     gulp.watch(paths.styles.watch, styles);
     gulp.watch(paths.templates.watch, templates);
@@ -162,10 +151,10 @@ function watch () {
 // Run & Build
 // ////////////////////////////////////////////////
 
-var compileSources = gulp.parallel(styles, scripts, templates, images);
-var live = gulp.parallel(browserSyncLive, watch);
+var compileSources = gulp.parallel(scripts, styles, templates, images);
 
-var develop = gulp.series(compileSources, live);
-var production = gulp.series(compileSources, cleanMaps);
-
-gulp.task('default', gulpif(isDev, develop, production));
+exports.default = gulpif(
+    isDev,
+        gulp.series(clean, compileSources, watch),
+        gulp.series(clean, compileSources)
+);
